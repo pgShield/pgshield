@@ -1,0 +1,12 @@
+{
+    "db_hosts": ["host1:5432", "host2:5432", "host3:5432"],
+    "listen_port": "5432",
+    "max_conns": 100,
+    "cache_ttl": 300,
+    "health_check_interval": 10,
+    "replication_mode": true,
+    "query_cache_ttl": 60,
+    "database_discovery": true,
+    "discovery_interval": 3600
+  }
+  
