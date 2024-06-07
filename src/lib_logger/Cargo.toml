@@ -1,0 +1,30 @@
+[package]
+name = "lib_logger"
+version = "0.1.0"
+authors = ["Indrit Zeqiri <indrit.zeqiri@gmail.com>"]
+edition = "2021"
+description = "An portable logger for pgShield, it uses either file logging, console logging, and syslog"
+repository = "https://github.com/ilstarno/pgShield"
+license = "Apache-2.0"
+keywords = ["logging", "log", "file", "syslog", "rotate", "pgshield"]
+categories = ["development-tools::debugging"]
+
+[dependencies]
+log = "0.4"
+env_logger = "0.9"
+syslog = "6.0"
+file-rotate = "0.7.6"
+chrono = "0.4.38"
+
+[lib]
+name = "lib_logger"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["std"]
+std = []
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3

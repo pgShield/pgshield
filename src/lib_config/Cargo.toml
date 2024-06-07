@@ -1,0 +1,29 @@
+[package]
+name = "lib_config"
+version = "0.1.0"
+authors = ["Indrit Zeqiri <indrit.zeqiri@gmail.com>"]
+edition = "2021"
+description = "Configuration loader module for pgShield"
+repository = "https://github.com/ilstarno/pgShield"
+license = "Apache-2.0"
+keywords = ["config", "configuration", "postgresql", "connection", "pooling", "pgShield"]
+categories = ["config"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+chrono = "0.4"
+
+[lib]
+name = "lib_config"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["std"]
+std = []
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
