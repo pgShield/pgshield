@@ -56,15 +56,44 @@ PGShield uses a JSON configuration file to set up the PostgreSQL servers, cache 
 
 ```json
 {
-    "db_hosts": ["host1:5432", "host2:5432"],
-    "listen_port": "5433",
-    "max_conns": 100,
-    "cache_ttl": 600,
-    "health_check_interval": 60,
-    "replication_mode": true,
-    "query_cache_ttl": 600,
-    "database_discovery": true,
-    "discovery_interval": 3600
+  "postgresql_hosts": [
+    {
+      "host": "localhost:5432",
+      "admin_auth_type": "trust"
+    },
+    {
+      "host": "example.com:5432",
+      "admin_auth_type": "password",
+      "admin_username": "postgres",
+      "admin_password": "mypassword"
+    },
+    {
+      "host": "ldap.example.com:5432",
+      "admin_auth_type": "ldap",
+      "admin_username": "admin",
+      "admin_password": "ldappassword"
+    },
+    {
+      "host": "cert.example.com:5432",
+      "admin_auth_type": "cert",
+      "admin_username": "cert_user",
+      "admin_password": "certpassword"
+    }
+  ],
+  "listen_port": "8080",
+  "max_conns": 100,
+  "cache_ttl": 3600,
+  "health_check_interval": 60,
+  "replication_mode": false,
+  "query_cache_ttl": 600,
+  "logging": {
+    "log_to_file": true,
+    "log_to_console": true,
+    "log_to_syslog": false,
+    "log_dir": "/var/log/pgshield",
+    "syslog_facility": "LOG_USER",
+    "syslog_process_name": "pgshield"
+  }
 }
 
 
