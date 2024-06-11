@@ -22,7 +22,7 @@ Whether you are running a high-traffic website or a complex data service, PGShie
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/ilstarno/pgshield.git
+    git clone https://github.com/pgshield/pgshield.git
     cd pgshield
     ```
 
