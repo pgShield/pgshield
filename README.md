@@ -1,6 +1,7 @@
-# PGShield
+# pgShield
 
-PGShield is a performant PostgreSQL gateway, load balancer, connection pooler with caching and brokering capabilities, inspired by pgBouncer and pgPool2. 
+
+pgShield is a performant PostgreSQL gateway, load balancer, connection pooler with caching and brokering capabilities, inspired by pgBouncer and pgPool2. 
 It is designed to handle high request loads efficiently and provide high availability for PostgreSQL services. This project is written in Rust and leverages asynchronous I/O with Tokio.
 I started learning Rust one year ago, driven by the need to build high-performance and safe systems. As I progressed, I wanted to create a tool that would be both challenging and beneficial to the community. 
 PGShield is the result of this journey. It aims to address some of the issues users face with pgBouncer, providing an alternative with enhanced performance, caching, and brokering capabilities.
@@ -37,7 +38,7 @@ Whether you are running a high-traffic website or a complex data service, PGShie
 
 ### Windows Release
 
-You can download the latest Windows release from the [Releases](https://github.com/ilstarno/pgshield/releases) page. Follow these steps to run PGShield on Windows:
+You can download the latest Windows release from the [Releases](https://github.com/pgshield/pgshield/releases) page. Follow these steps to run PGShield on Windows:
 
 1. **Download the latest release** from the Releases page.
 2. **Extract the downloaded ZIP file** to a desired location.
