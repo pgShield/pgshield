@@ -18,7 +18,7 @@ Whether you are running a high-traffic website or a complex data service, PGShie
 - **High Availability**: Ensures that only healthy PostgreSQL servers are used to handle requests.
 - **Asynchronous I/O**: Uses Tokio for efficient, non-blocking I/O operations.
 
-## Installation
+## Installation         
 
 1. **Clone the repository**:
     ```sh
@@ -69,13 +69,13 @@ PGShield uses a JSON configuration file to set up the PostgreSQL servers, cache 
       "admin_password": "mypassword"
     },
     {
-      "host": "ldap.example.com:5432",
+      "host": "ldap.example.com:389",
       "admin_auth_type": "ldap",
       "admin_username": "admin",
       "admin_password": "ldappassword"
     },
     {
-      "host": "cert.example.com:5432",
+      "host": "cert_path_here_instead",
       "admin_auth_type": "cert",
       "admin_username": "cert_user",
       "admin_password": "certpassword"

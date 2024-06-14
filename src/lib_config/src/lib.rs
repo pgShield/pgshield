@@ -1,13 +1,12 @@
-use log::info;
+use log;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::path::Path;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "lowercase")]
-enum PostgresqlAuthType {
+pub enum PostgresqlAuthType {
     Trust,
     Password,
     Md5,
@@ -61,7 +60,7 @@ impl Config {
 
         // Check if the configuration file exists
         if !file_path.exists() {
-            info!("Configuration file not found, creating one with dummy data");
+            log::info!("Configuration file not found, creating one with dummy data");
             let dummy_config = Config {
                 postgresql_hosts: vec![PostgresqlHost {
                     host: "localhost:5432".to_string(),

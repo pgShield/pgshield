@@ -1,5 +1,5 @@
 // cache.rs
-use crate::logger::log_info;
+use log;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -18,7 +18,7 @@ impl ConnCache {
     }
 
     pub fn get(&self, key: &str) -> Option<std::net::TcpStream> {
-        let mut cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().unwrap();
         if let Some((conn, last_used)) = cache.get(key) {
             if last_used.elapsed() < self.ttl {
                 return Some(conn.try_clone().unwrap());
@@ -30,15 +30,15 @@ impl ConnCache {
     pub fn set(&self, key: String, conn: std::net::TcpStream) {
         let mut cache = self.cache.lock().unwrap();
         cache.insert(key.clone(), (conn, Instant::now()));
-        log_info(&format!("Cached connection for key {}", key));
+        log::info!("Cached connection for key {}", key);
     }
 
     pub fn cleanup(&self) {
         let mut cache = self.cache.lock().unwrap();
         cache.retain(|key, (_conn, last_used)| {
             let retain = last_used.elapsed() < self.ttl;
-            if !retain {
-                log_info(&format!("Cleaned up cached connection for key {}", key));
+            if!retain {
+                log::info!("Cleaned up cached connection for key {}", key);
             }
             retain
         });
@@ -62,7 +62,7 @@ impl QueryCache {
     }
 
     pub fn get(&self, query: &str) -> Option<String> {
-        let mut cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().unwrap();
         let key = self.hash(query);
         if let Some((result, last_used)) = cache.get(&key) {
             if last_used.elapsed() < self.ttl {
@@ -76,7 +76,7 @@ impl QueryCache {
         let mut cache = self.cache.lock().unwrap();
         let key = self.hash(query);
         cache.insert(key, (result, Instant::now()));
-        log_info(&format!("Cached query result for key {}", key));
+        log::info!("Cached query result for key {}", key);
     }
 
     fn hash<T: Hash>(&self, t: T) -> u64 {

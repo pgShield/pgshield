@@ -11,7 +11,7 @@
       "admin_password": "mypassword"
     },
     {
-      "host": "ldap.example.com:5432",
+      "host": "ldap.example.com:389",
       "admin_auth_type": "ldap",
       "admin_username": "admin",
       "admin_password": "ldappassword"
