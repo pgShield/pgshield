@@ -2,48 +2,53 @@ extern crate lib_logger;
 extern crate lib_config;
 extern crate lib_pool;
 extern crate lib_cache;
+extern crate syslog;
 
-use lib_logger::LoggerConfig;
+use syslog::Facility;
+use lib_logger::{LoggerConfig, init_logger};
 use lib_config::Config;
-use lib_pool::PoolConfig;
-use lib_cache::CacheConfig;
+use lib_pool::Pool;
+use lib_cache::Cache;
+
+use std::time::Duration;
 
 pub struct Engine {
-    logger: lib_logger::Logger,
     config: Config,
-    pool: lib_pool::Pool,
-    cache: lib_cache::Cache,
+    pool: Pool,
+    cache: Cache,
 }
 
 impl Engine {
-    pub fn new() -> Result<Self, String> {
-
-        
+    pub async fn new() -> Result<Self, Box<dyn std::error::Error>> {
         // Initialize logger
         let logger_config = LoggerConfig {
-            log_to_file: true,
+            log_to_file: false,
             log_to_console: true,
             log_to_syslog: false,
-            log_dir: Some("logs".into()),
-            syslog_facility: syslog::Facility::LOG_USER,
+            log_dir: Some("C:\\logs".into()),
+            syslog_facility: Facility::LOG_USER,
             syslog_process_name: "pgShield".into(),
             syslog_remote_addr: None,
         };
-        let logger = lib_logger::init_logger(&logger_config)?;
+
+        let _ = init_logger(&logger_config)?;
 
         // Initialize config
-        let config = Config::new()?;
+        let config = Config::from_file("path/to/config/file")?;
 
         // Initialize pool
-        let pool_config = PoolConfig::default();
-        let pool = lib_pool::Pool::new(pool_config)?;
+        let mut db_config = tokio_postgres::Config::new();
+        db_config.user("your_username");
+        db_config.password("your_password");
+        db_config.host("your_host");
+        db_config.dbname("your_database_name");
+
+        let pool = Pool::new(db_config, 100).await?;
 
         // Initialize cache
-        let cache_config = CacheConfig::default();
-        let cache = lib_cache::Cache::new(cache_config)?;
+        let cache = Cache::new(Duration::from_secs(config.cache_ttl));
 
         Ok(Engine {
-            logger,
             config,
             pool,
             cache,
@@ -51,10 +56,6 @@ impl Engine {
     }
 
     pub fn start(&self) {
-        // Start the engine, including the pool and cache
-        self.pool.start();
-        self.cache.start();
-
         log::info!("pgShield engine started");
     }
 }

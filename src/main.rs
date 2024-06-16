@@ -1,7 +1,8 @@
-mod lib_engine;
-extern crate lib_engine;
+use lib_engine::Engine;
+use tokio;
 
-fn main() {
-    let engine = lib_engine::Engine::new().unwrap();
+#[tokio::main]
+async fn main() {
+    let engine = Engine::new().await.unwrap();
     engine.start();
 }

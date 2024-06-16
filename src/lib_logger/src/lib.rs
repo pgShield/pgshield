@@ -60,7 +60,7 @@ fn init_logger_inner(config: &LoggerConfig) -> Result<(), SetLoggerError> {
             None => syslog::unix(formatter).unwrap(),
         };
 
-        log::set_boxed_logger(Box::new(BasicLogger::new(logger)))?;
+        let _ = log::set_boxed_logger(Box::new(BasicLogger::new(logger)))?;
         log::set_max_level(LevelFilter::Info);
     }
 
@@ -90,7 +90,7 @@ fn init_logger_inner(config: &LoggerConfig) -> Result<(), SetLoggerError> {
         builder.filter(None, LevelFilter::Info);
     
         let logger = builder.build();
-        log::set_boxed_logger(Box::new(logger));
+        let _ = log::set_boxed_logger(Box::new(logger));
         log::set_max_level(LevelFilter::Info);
     
         // Write log messages to the file
@@ -109,7 +109,7 @@ fn init_logger_inner(config: &LoggerConfig) -> Result<(), SetLoggerError> {
             Ok(())
         });
         builder.filter(None, LevelFilter::Info);
-        builder.init();
+       // builder.init();
     }
 
     Ok(())
@@ -123,10 +123,10 @@ fn create_log_dir_and_file(
     let log_date_dir = format!(
         "{:04}{:02}{:02}",
         now.elapsed()
-          .unwrap_or_default()
-          .as_secs()
-          .checked_div(86400)
-          .unwrap_or(0)
+            .unwrap_or_default()
+            .as_secs()
+            .checked_div(86400)
+            .unwrap_or(0)
             / 86400
             + 719528, // Unix epoch for 1970-01-01
         chrono::Local::now().month(),
@@ -134,7 +134,16 @@ fn create_log_dir_and_file(
     );
     let log_path = log_dir.join(&log_date_dir).join(log_file_name);
 
-    fs::create_dir_all(log_path.parent().unwrap())?;
+    if let Some(parent) = log_path.parent() {
+        if !parent.exists() {
+            fs::create_dir_all(parent)?;
+        }
+    } else {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "Invalid log path",
+        ));
+    }
 
     Ok(log_path)
 }

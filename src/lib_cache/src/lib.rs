@@ -4,14 +4,14 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-pub struct ConnCache {
+pub struct Cache {
     cache: Arc<Mutex<HashMap<String, (std::net::TcpStream, Instant)>>>,
     ttl: Duration,
 }
 
-impl ConnCache {
+impl Cache {
     pub fn new(ttl: Duration) -> Self {
-        ConnCache {
+        Cache {
             cache: Arc::new(Mutex::new(HashMap::new())),
             ttl,
         }
