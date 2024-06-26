@@ -13,5 +13,5 @@ impl PostgresClient {
         Ok(Self { connection })
     }
 
-    // Add other public methods for executing queries, etc.
+    
 }
