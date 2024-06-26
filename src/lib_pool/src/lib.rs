@@ -1,20 +1,20 @@
 use std::sync::{Arc, Mutex};
-use tokio_postgres::{Client, Config, Error, NoTls};
+use lib_pgsqlcli::{client::PostgresClient, error::PostgresError, config::ConnectionConfig};
 
 pub struct Pool {
-    clients: Arc<Mutex<Vec<Client>>>,
-    config: Config,
+    clients: Arc<Mutex<Vec<PostgresClient>>>,
+    config: ConnectionConfig,
     max_size: usize,
 }
 
 impl Pool {
-    pub async fn new(config: Config, max_size: usize) -> Result<Self, Error> {
+    pub async fn new(connection_string: &str, max_size: usize) -> Result<Self, PostgresError> {
         let mut clients = Vec::new();
+        let config = ConnectionConfig::from_connection_string(connection_string)?;
 
         for _ in 0..max_size {
-            let (client, _connection) = config.connect(NoTls).await?;
+            let client = PostgresClient::connect(connection_string).await?;
             clients.push(client);
-            
         }
 
         Ok(Pool {
@@ -24,17 +24,11 @@ impl Pool {
         })
     }
 
-    pub async fn get_client(&self) -> Result<Client, Error> {
-        let mut clients = self.clients.lock().unwrap();
-        if let Some(client) = clients.pop() {
-            Ok(client)
-        } else {
-            let (client, _connection) = self.config.connect(NoTls).await?;
-            Ok(client)
-        }
+    pub async fn get_client(&self) -> Result<PostgresClient, PostgresError> {
+        PostgresClient::connect(&self.config.to_string()).await // Adjusted the call to connect
     }
 
-    pub async fn release_client(&self, client: Client) -> Result<(), Error> {
+    pub async fn release_client(&self, client: PostgresClient) {
         let mut clients = self.clients.lock().unwrap();
 
         if clients.len() < self.max_size {
@@ -43,17 +37,15 @@ impl Pool {
             // Log error or handle exceeding pool size gracefully (e.g., backoff)
             eprintln!("Connection pool reached max size, discarding client");
         }
-
-        Ok(())
     }
 
-    pub async fn execute<F, T>(&self, f: F) -> Result<T, Error>
+    pub async fn execute<F, T>(&self, f: F) -> Result<T, PostgresError>
     where
-        F: FnOnce(&mut Client) -> Result<T, Error>,
+        F: FnOnce(&mut PostgresClient) -> Result<T, PostgresError>,
     {
         let mut client = self.get_client().await?;
         let result = f(&mut client);
-        self.release_client(client).await?;
+        self.release_client(client).await;
         result
     }
 }

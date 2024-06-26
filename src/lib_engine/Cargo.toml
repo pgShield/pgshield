@@ -27,7 +27,7 @@ lib_query = {path = "../lib_query"}
 
 [lib]
 name = "lib_engine"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["dylib"]
 
 [features]
 default = ["std"]

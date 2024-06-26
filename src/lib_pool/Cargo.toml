@@ -14,11 +14,11 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 chrono = "0.4"
 tokio-postgres = "0.7.2"
-
+lib_pgsqlcli = {path = "../lib_pgsql-cli"}
 
 [lib]
 name = "lib_pool"
-crate-type = ["cdylib", "rlib"]
+crate-type = ["dylib"]
 
 [features]
 default = ["std"]

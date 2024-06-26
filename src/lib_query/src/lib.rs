@@ -1,19 +1,19 @@
 use serde::de::DeserializeOwned;
 use serde_json::Value;
-use tokio_postgres::{Client, Config, Error, NoTls, Row};
-use tokio_postgres::types::ToSql;
 use log;
 use std::error::Error as StdError;
 use std::fmt;
- 
+
+use lib_pgsqlcli::{client::PostgresClient, error::PostgresError, connection::PostgresValue};  // Adjusted the imports
+
 #[derive(Debug)]
 pub enum MyError {
-    Postgres(tokio_postgres::Error),
+    Postgres(PostgresError),
     Serde(serde_json::Error),
 }
 
 impl fmt::Display for MyError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MyError::Postgres(e) => write!(f, "Postgres error: {}", e),
             MyError::Serde(e) => write!(f, "Serde error: {}", e),
@@ -21,8 +21,10 @@ impl fmt::Display for MyError {
     }
 }
 
-impl From<tokio_postgres::Error> for MyError {
-    fn from(e: tokio_postgres::Error) -> Self {
+impl StdError for MyError {}
+
+impl From<PostgresError> for MyError {
+    fn from(e: PostgresError) -> Self {
         MyError::Postgres(e)
     }
 }
@@ -33,10 +35,9 @@ impl From<serde_json::Error> for MyError {
     }
 }
 
-
 pub struct QueryBuilder {
     sql: String,
-    params: Vec<Box<dyn ToSql + Sync>>,
+    params: Vec<PostgresValue>,
 }
 
 impl QueryBuilder {
@@ -47,8 +48,8 @@ impl QueryBuilder {
         }
     }
 
-    pub fn bind<T: ToSql + Sync +'static>(&mut self, value: T) -> &mut Self {
-        self.params.push(Box::new(value));
+    pub fn bind(&mut self, value: PostgresValue) -> &mut Self {
+        self.params.push(value);
         self
     }
 
@@ -62,34 +63,38 @@ impl QueryBuilder {
 
 pub struct Query {
     sql: String,
-    params: Vec<Box<dyn ToSql + Sync>>,
+    params: Vec<PostgresValue>,
 }
 
 impl Query {
-    pub async fn execute(&self, client: &mut Client) -> Result<u64, Error> {
-        let params: Vec<&(dyn ToSql + Sync)> = self.params.iter().map(|p| p.as_ref()).collect();
-        client.execute(&self.sql, &params).await
+    pub async fn execute(&self, client: &mut PostgresClient) -> Result<u64, PostgresError> {
+        client.execute(&self.sql).await.map(|_| 0)  // Adjusted the method call
     }
-    
-    pub async fn query<T: DeserializeOwned>(&self, client: &mut Client) -> Result<Vec<T>, MyError> {
+
+    pub async fn query<T: DeserializeOwned>(&self, client: &mut PostgresClient) -> Result<Vec<T>, MyError> {
         let mut map = serde_json::Map::new();  // Reuse a single Map
-    
-        let params: Vec<&(dyn ToSql + Sync)> = self.params.iter().map(|p| p.as_ref()).collect();
-        let rows = client.query(&self.sql, &params).await.map_err(MyError::from)?;
-    
+
+        let rows = client.query(&self.sql).await.map_err(MyError::from)?;  // Adjusted the method call
+
         let mut result = Vec::new();
         for row in rows {
             map.clear();  // Clear the map before processing each row
-            for column in row.columns() {
-                let value: Value = match row.try_get::<&str, Option<String>>(column.name()) {
-                    Ok(Some(val)) => serde_json::from_str(&val).unwrap_or(Value::Null),
-                    Ok(None) => Value::Null,
-                    Err(e) => return Err(e.into()),
+            for (column, value) in row {
+                let json_value = match value {
+                    PostgresValue::Null => Value::Null,
+                    PostgresValue::Boolean(b) => Value::Bool(b),
+                    PostgresValue::Int16(i) => Value::Number(i.into()),
+                    PostgresValue::Int32(i) => Value::Number(i.into()),
+                    PostgresValue::Int64(i) => Value::Number(i.into()),
+                    PostgresValue::Float32(f) => Value::Number(serde_json::Number::from_f64(f as f64).unwrap()),
+                    PostgresValue::Float64(f) => Value::Number(serde_json::Number::from_f64(f).unwrap()),
+                    PostgresValue::String(s) => Value::String(s),
+                    PostgresValue::Bytes(b) => Value::String(hex::encode(b)),
                 };
-                map.insert(column.name().to_string(), value);
+                map.insert(column, json_value);
             }
-            let value: Value = Value::Object(map.clone());
-            
+            let value = Value::Object(map.clone());
+
             let deserialized: Result<T, _> = serde_json::from_value(value);
             match deserialized {
                 Ok(data) => result.push(data),

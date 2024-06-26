@@ -3,12 +3,14 @@ extern crate lib_config;
 extern crate lib_pool;
 extern crate lib_cache;
 extern crate syslog;
+extern crate lib_pgsqlcli;
 
 use syslog::Facility;
 use lib_logger::{LoggerConfig, init_logger};
 use lib_config::Config;
 use lib_pool::Pool;
 use lib_cache::Cache;
+use lib_pgsqlcli::PostgresError;
 
 use std::time::Duration;
 
@@ -37,13 +39,11 @@ impl Engine {
         let config = Config::from_file("path/to/config/file")?;
 
         // Initialize pool
-        let mut db_config = tokio_postgres::Config::new();
-        db_config.user("your_username");
-        db_config.password("your_password");
-        db_config.host("your_host");
-        db_config.dbname("your_database_name");
-
-        let pool = Pool::new(db_config, 100).await?;
+        let connection_string = format!(
+            "postgresql://{}:{}@{}/{}",
+            config.db_user, config.db_password, config.db_host, config.db_name
+        );
+        let pool = Pool::new(&connection_string, 100).await?;
 
         // Initialize cache
         let cache = Cache::new(Duration::from_secs(config.cache_ttl));

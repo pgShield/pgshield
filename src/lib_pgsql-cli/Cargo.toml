@@ -10,14 +10,16 @@ keywords = ["client", "postgresql", "connection", "client", "pgShield"]
 categories = ["engine"]
 
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-chrono = "0.4"
-lib_logger = { path = "../lib_logger" }
-log = "0.4"
-byteorder = "1.5.0"
-hex = "0.4.3"
-md-5 = "0.10.6"
+tokio = { version = "1.0", features = ["full"] }
+tokio-native-tls = "0.3"
+native-tls = "0.2"
+bytes = "1.0"
+url = "2.2"
+md-5 = "0.10"
+hex = "0.4"
+oauth2 = "4.1"
+ldap3 = "0.10"
+
 
 [lib]
 name = "lib_pgsqlcli"
